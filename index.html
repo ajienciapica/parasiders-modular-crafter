@@ -55,46 +55,54 @@
     <p style="font-size:12px;color:#666">Partes reales de tus sprites en las 4 direcciones. Combina libremente.</p>
   </div>
 </div>
-<div class="status" id="st">Cargando...</div>
+<div class="status" id="st">Cargando partes...</div>
 
 <script>
-let lib = null, cache = {}, frames = [], cur = 0;
+let lib = null, imageData = {}, cache = {}, frames = [], cur = 0;
 const FW=32, FH=48;
 const DIRS=["down","left","right","up"];
 const NAMES=["Abajo","Izquierda","Derecha","Arriba"];
 const PALETTE=["#ffffff","#ff4444","#44ff44","#4444ff","#ffff44","#ff44ff","#44ffff","#ffaa00","#aa44ff","#88ff88","#ff8888","#8888ff"];
 
 async function init(){
-  const r = await fetch("parts/library.json");
-  lib = await r.json();
-  fill("head", lib.heads.down);
-  fill("torso", lib.torsos.down);
-  fill("legs", lib.legs.down);
-  const pal = document.getElementById("pal");
-  PALETTE.forEach(c=>{
-    const d=document.createElement("div");
-    d.className="sw"; d.style.background=c;
-    d.onclick=()=>tint(c);
-    pal.appendChild(d);
-  });
-  document.getElementById("st").textContent = `Partes: ${lib.heads.down.length} cabezas × 4 dir`;
-  build();
+  try {
+    const r = await fetch("parts_bundle.json");
+    const bundle = await r.json();
+    lib = bundle.library;
+    imageData = bundle.images;
+    fill("head", lib.heads.down);
+    fill("torso", lib.torsos.down);
+    fill("legs", lib.legs.down);
+    const pal = document.getElementById("pal");
+    PALETTE.forEach(c=>{
+      const d=document.createElement("div");
+      d.className="sw"; d.style.background=c;
+      d.onclick=()=>tint(c);
+      pal.appendChild(d);
+    });
+    document.getElementById("st").textContent = `Listo: ${lib.heads.down.length} cabezas × 4 direcciones`;
+    build();
+  } catch(e) {
+    document.getElementById("st").textContent = "Error cargando parts_bundle.json";
+  }
 }
 function fill(id, arr){
   const s=document.getElementById(id);
   arr.forEach(p=>{
     const o=document.createElement("option");
     o.value=p;
-    o.text=p.replace(/_down_h\.png| _down_t\.png|_down_l\.png|_Sprite.*|_down_.*/g,"").replace(/_/g," ");
+    o.text=p.replace(/_down_[htl]\.png|_Sprite.*|_down_.*/g,"").replace(/_/g," ");
     s.appendChild(o);
   });
 }
 async function img(name){
   if(cache[name]) return cache[name];
+  const src = imageData[name];
+  if(!src) return null;
   return new Promise(res=>{
     const i=new Image();
     i.onload=()=>{cache[name]=i;res(i)};
-    i.src="parts/"+name;
+    i.src=src;
   });
 }
 async function build(){
@@ -107,9 +115,9 @@ async function build(){
   frames=[];
   for(let d=0;d<4;d++){
     const dn=DIRS[d];
-    const hi=await img(baseH+"_"+dn+"_h.png").catch(()=>null);
-    const ti=await img(baseT+"_"+dn+"_t.png").catch(()=>null);
-    const li=await img(baseL+"_"+dn+"_l.png").catch(()=>null);
+    const hi=await img(baseH+"_"+dn+"_h.png");
+    const ti=await img(baseT+"_"+dn+"_t.png");
+    const li=await img(baseL+"_"+dn+"_l.png");
     for(let f=0;f<4;f++){
       const c=document.createElement("canvas");
       c.width=FW; c.height=FH;
