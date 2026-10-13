@@ -4,208 +4,167 @@
 <meta charset="UTF-8">
 <title>Parasiders Character Generator</title>
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
-  header { background: #1a1a1a; padding: 12px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-  h1 { margin: 0; font-size: 20px; }
-  .container { display: flex; flex: 1; overflow: hidden; }
-  .parts { width: 320px; background: #161616; padding: 16px; overflow-y: auto; border-right: 1px solid #2a2a2a; }
-  .preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; padding: 20px; }
-  .options { width: 260px; background: #161616; padding: 16px; overflow-y: auto; border-left: 1px solid #2a2a2a; }
-  .category { margin-bottom: 20px; }
-  .category h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
-  select { width: 100%; padding: 8px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
-  canvas { image-rendering: pixelated; border: 3px solid #333; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-  .controls { margin-top: 16px; display: flex; gap: 8px; }
-  button { padding: 10px 16px; background: #0066ff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-  button:hover { background: #0088ff; }
-  button.secondary { background: #333; }
-  button.secondary:hover { background: #444; }
-  .frame-info { margin-top: 12px; font-size: 14px; color: #aaa; }
-  .color-row { display: flex; gap: 8px; margin: 8px 0; align-items: center; }
-  .color-row input[type=color] { width: 40px; height: 32px; border: none; background: none; }
-  .status { background: #111; padding: 8px 16px; font-size: 13px; border-top: 1px solid #222; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,sans-serif;background:#0d0d0d;color:#eee;height:100vh;display:flex;flex-direction:column}
+  header{background:#161616;padding:10px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center}
+  h1{margin:0;font-size:18px}
+  .wrap{display:flex;flex:1;overflow:hidden}
+  .col{width:280px;background:#141414;padding:12px;overflow-y:auto;border-right:1px solid #222}
+  .col.right{border-right:none;border-left:1px solid #222}
+  .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111}
+  .cat{margin-bottom:14px}
+  .cat h3{margin:0 0 6px;font-size:12px;color:#888;text-transform:uppercase}
+  select{width:100%;padding:7px;background:#222;color:#fff;border:1px solid #444;border-radius:4px}
+  canvas{image-rendering:pixelated;border:2px solid #333;background:#000}
+  button{padding:8px 14px;background:#0066cc;color:#fff;border:none;border-radius:5px;cursor:pointer;margin:4px}
+  button:hover{background:#0088ee}
+  button.sec{background:#333}
+  .info{margin:8px 0;color:#aaa;font-size:14px}
+  .status{background:#111;padding:6px 12px;font-size:12px;border-top:1px solid #222}
+  .colors{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+  .sw{width:22px;height:22px;border-radius:3px;cursor:pointer;border:1px solid #555}
 </style>
 </head>
 <body>
 <header>
   <h1>Parasiders Character Generator</h1>
-  <div>32×48 · 4 direcciones</div>
+  <span>32×48 · 4 direcciones</span>
 </header>
-
-<div class="container">
-  <div class="parts">
-    <div class="category">
-      <h3>Cabeza</h3>
-      <select id="head"></select>
-    </div>
-    <div class="category">
-      <h3>Torso</h3>
-      <select id="torso"></select>
-    </div>
-    <div class="category">
-      <h3>Piernas</h3>
-      <select id="legs"></select>
-    </div>
-    <button onclick="compose()" style="width:100%; margin-top:8px;">Actualizar preview</button>
+<div class="wrap">
+  <div class="col">
+    <div class="cat"><h3>Cabeza</h3><select id="head"></select></div>
+    <div class="cat"><h3>Torso</h3><select id="torso"></select></div>
+    <div class="cat"><h3>Piernas</h3><select id="legs"></select></div>
+    <button onclick="build()" style="width:100%">Generar 4 direcciones</button>
   </div>
-
-  <div class="preview">
-    <canvas id="canvas" width="160" height="240"></canvas>
-    <div class="controls">
-      <button class="secondary" onclick="prevFrame()">◀ Anterior</button>
-      <button class="secondary" onclick="nextFrame()">Siguiente ▶</button>
+  <div class="center">
+    <canvas id="cv" width="160" height="240"></canvas>
+    <div>
+      <button class="sec" onclick="nav(-1)">◀</button>
+      <span class="info" id="lbl">Abajo · 1</span>
+      <button class="sec" onclick="nav(1)">▶</button>
     </div>
-    <div class="frame-info" id="frameInfo">Abajo · Frame 1</div>
-    <div class="controls">
-      <button onclick="exportSheet()">Descargar spritesheet</button>
-    </div>
+    <button onclick="exportPNG()">Descargar spritesheet</button>
   </div>
-
-  <div class="options">
-    <div class="category">
-      <h3>Color swap</h3>
-      <div class="color-row">
-        <span>De</span>
-        <input type="color" id="fromColor" value="#ffffff">
-      </div>
-      <div class="color-row">
-        <span>A</span>
-        <input type="color" id="toColor" value="#ffcc00">
-      </div>
-      <button onclick="applySwap()" style="width:100%;">Aplicar swap</button>
+  <div class="col right">
+    <div class="cat">
+      <h3>Variaciones de color</h3>
+      <div class="colors" id="pal"></div>
+      <button onclick="randomizeColors()" style="width:100%">Aleatorizar colores</button>
     </div>
-    <p style="font-size:12px; color:#666; margin-top:24px;">
-      Partes extraídas automáticamente de tus spritesheets.<br><br>
-      Elige combinaciones y genera el sheet completo de 4 direcciones para RPG Maker XP.
-    </p>
+    <p style="font-size:12px;color:#666">Partes reales de tus sprites en las 4 direcciones. Combina libremente.</p>
   </div>
 </div>
-
-<div class="status" id="status">Cargando partes...</div>
+<div class="status" id="st">Cargando...</div>
 
 <script>
-let library = { heads: [], torsos: [], legs: [] };
-let cache = {};
-let frames = [];
-let currentFrame = 0;
-const FW = 32, FH = 48;
-const DIRS = ["Abajo", "Izquierda", "Derecha", "Arriba"];
+let lib = null, cache = {}, frames = [], cur = 0;
+const FW=32, FH=48;
+const DIRS=["down","left","right","up"];
+const NAMES=["Abajo","Izquierda","Derecha","Arriba"];
+const PALETTE=["#ffffff","#ff4444","#44ff44","#4444ff","#ffff44","#ff44ff","#44ffff","#ffaa00","#aa44ff","#88ff88","#ff8888","#8888ff"];
 
-async function init() {
-  try {
-    const res = await fetch('parts/library.json');
-    library = await res.json();
-    fillSelect('head', library.heads, '_head.png');
-    fillSelect('torso', library.torsos, '_torso.png');
-    fillSelect('legs', library.legs, '_legs.png');
-    document.getElementById('status').textContent = `${library.heads.length} partes cargadas`;
-    await compose();
-  } catch (e) {
-    document.getElementById('status').textContent = "Error cargando parts/library.json — asegúrate de que la carpeta parts/ esté en el repo.";
-  }
+async function init(){
+  const r = await fetch("parts/library.json");
+  lib = await r.json();
+  fill("head", lib.heads.down);
+  fill("torso", lib.torsos.down);
+  fill("legs", lib.legs.down);
+  const pal = document.getElementById("pal");
+  PALETTE.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="sw"; d.style.background=c;
+    d.onclick=()=>tint(c);
+    pal.appendChild(d);
+  });
+  document.getElementById("st").textContent = `Partes: ${lib.heads.down.length} cabezas × 4 dir`;
+  build();
 }
-
-function fillSelect(id, list, suffix) {
-  const sel = document.getElementById(id);
-  list.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = p.replace(suffix, '').replace(/_Sprite.*$/, '').replace(/_/g, ' ');
-    sel.appendChild(opt);
+function fill(id, arr){
+  const s=document.getElementById(id);
+  arr.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p;
+    o.text=p.replace(/_down_h\.png| _down_t\.png|_down_l\.png|_Sprite.*|_down_.*/g,"").replace(/_/g," ");
+    s.appendChild(o);
   });
 }
-
-async function loadImg(name) {
-  if (cache[name]) return cache[name];
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => { cache[name] = img; resolve(img); };
-    img.onerror = reject;
-    img.src = 'parts/' + name;
+async function img(name){
+  if(cache[name]) return cache[name];
+  return new Promise(res=>{
+    const i=new Image();
+    i.onload=()=>{cache[name]=i;res(i)};
+    i.src="parts/"+name;
   });
 }
-
-async function compose() {
-  const headName = document.getElementById('head').value;
-  const torsoName = document.getElementById('torso').value;
-  const legsName = document.getElementById('legs').value;
-  try {
-    const head = await loadImg(headName);
-    const torso = await loadImg(torsoName);
-    const legs = await loadImg(legsName);
-    frames = [];
-    for (let i = 0; i < 16; i++) {
-      const c = document.createElement('canvas');
-      c.width = FW; c.height = FH;
-      const ctx = c.getContext('2d');
-      if (legs) ctx.drawImage(legs, 0, 28);
-      if (torso) ctx.drawImage(torso, 0, 14);
-      if (head) ctx.drawImage(head, 0, 0);
+async function build(){
+  const h=document.getElementById("head").value;
+  const t=document.getElementById("torso").value;
+  const l=document.getElementById("legs").value;
+  const baseH=h.replace("_down_h.png","");
+  const baseT=t.replace("_down_t.png","");
+  const baseL=l.replace("_down_l.png","");
+  frames=[];
+  for(let d=0;d<4;d++){
+    const dn=DIRS[d];
+    const hi=await img(baseH+"_"+dn+"_h.png").catch(()=>null);
+    const ti=await img(baseT+"_"+dn+"_t.png").catch(()=>null);
+    const li=await img(baseL+"_"+dn+"_l.png").catch(()=>null);
+    for(let f=0;f<4;f++){
+      const c=document.createElement("canvas");
+      c.width=FW; c.height=FH;
+      const ctx=c.getContext("2d");
+      if(li) ctx.drawImage(li,0,28);
+      if(ti) ctx.drawImage(ti,0,14);
+      if(hi) ctx.drawImage(hi,0,0);
       frames.push(c);
     }
-    currentFrame = 0;
-    draw();
-    document.getElementById('status').textContent = "Listo";
-  } catch (e) {
-    document.getElementById('status').textContent = "Error cargando alguna parte";
   }
+  cur=0; draw();
+  document.getElementById("st").textContent="Generado (4 direcciones)";
 }
-
-function draw() {
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = false;
-  const scale = 5;
-  canvas.width = FW * scale;
-  canvas.height = FH * scale;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (frames[currentFrame]) {
-    ctx.drawImage(frames[currentFrame], 0, 0, canvas.width, canvas.height);
-  }
-  const dir = Math.floor(currentFrame / 4);
-  const fr = (currentFrame % 4) + 1;
-  document.getElementById('frameInfo').textContent = `${DIRS[dir]} · Frame ${fr}`;
+function draw(){
+  const cv=document.getElementById("cv");
+  const ctx=cv.getContext("2d");
+  ctx.imageSmoothingEnabled=false;
+  const sc=5;
+  cv.width=FW*sc; cv.height=FH*sc;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(frames[cur]) ctx.drawImage(frames[cur],0,0,cv.width,cv.height);
+  const dir=Math.floor(cur/4);
+  document.getElementById("lbl").textContent=`${NAMES[dir]} · Frame ${(cur%4)+1}`;
 }
-
-function prevFrame() { currentFrame = (currentFrame - 1 + 16) % 16; draw(); }
-function nextFrame() { currentFrame = (currentFrame + 1) % 16; draw(); }
-
-function applySwap() {
-  if (!frames.length) return;
-  const from = document.getElementById('fromColor').value;
-  const to = document.getElementById('toColor').value;
-  const c = frames[currentFrame];
-  const ctx = c.getContext('2d');
-  const img = ctx.getImageData(0, 0, FW, FH);
-  const d = img.data;
-  const fr = parseInt(from.substr(1,2),16), fg = parseInt(from.substr(3,2),16), fb = parseInt(from.substr(5,2),16);
-  const tr = parseInt(to.substr(1,2),16), tg = parseInt(to.substr(3,2),16), tb = parseInt(to.substr(5,2),16);
-  for (let i = 0; i < d.length; i += 4) {
-    if (d[i] === fr && d[i+1] === fg && d[i+2] === fb) {
-      d[i] = tr; d[i+1] = tg; d[i+2] = tb;
+function nav(d){cur=(cur+d+16)%16; draw();}
+function tint(color){
+  if(!frames.length) return;
+  const c=frames[cur];
+  const ctx=c.getContext("2d");
+  const data=ctx.getImageData(0,0,FW,FH);
+  const d=data.data;
+  const r=parseInt(color.substr(1,2),16), g=parseInt(color.substr(3,2),16), b=parseInt(color.substr(5,2),16);
+  for(let i=0;i<d.length;i+=4){
+    if(d[i+3]>10 && d[i]>180 && d[i+1]>180 && d[i+2]>180){
+      d[i]=r; d[i+1]=g; d[i+2]=b;
     }
   }
-  ctx.putImageData(img, 0, 0);
+  ctx.putImageData(data,0,0);
   draw();
 }
-
-function exportSheet() {
-  if (!frames.length) return;
-  const sheet = document.createElement('canvas');
-  sheet.width = FW * 4;
-  sheet.height = FH * 4;
-  const sctx = sheet.getContext('2d');
-  for (let i = 0; i < 16; i++) {
-    sctx.drawImage(frames[i], (i % 4) * FW, Math.floor(i / 4) * FH);
-  }
-  const a = document.createElement('a');
-  a.href = sheet.toDataURL('image/png');
-  a.download = 'parasiders_character.png';
-  a.click();
-  document.getElementById('status').textContent = "Spritesheet descargado";
+function randomizeColors(){
+  const c=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+  tint(c);
 }
-
+function exportPNG(){
+  if(!frames.length) return;
+  const s=document.createElement("canvas");
+  s.width=FW*4; s.height=FH*4;
+  const ctx=s.getContext("2d");
+  for(let i=0;i<16;i++) ctx.drawImage(frames[i],(i%4)*FW,Math.floor(i/4)*FH);
+  const a=document.createElement("a");
+  a.href=s.toDataURL("image/png");
+  a.download="parasiders_char.png";
+  a.click();
+}
 init();
 </script>
 </body>
