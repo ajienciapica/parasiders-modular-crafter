@@ -4,25 +4,26 @@
 <meta charset="UTF-8">
 <title>Parasiders Character Generator</title>
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,sans-serif;background:#0d0d0d;color:#eee;height:100vh;display:flex;flex-direction:column}
-  header{background:#161616;padding:10px 16px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center}
-  h1{margin:0;font-size:18px}
-  .wrap{display:flex;flex:1;overflow:hidden}
-  .col{width:280px;background:#141414;padding:12px;overflow-y:auto;border-right:1px solid #222}
-  .col.right{border-right:none;border-left:1px solid #222}
-  .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111}
-  .cat{margin-bottom:14px}
-  .cat h3{margin:0 0 6px;font-size:12px;color:#888;text-transform:uppercase}
-  select{width:100%;padding:7px;background:#222;color:#fff;border:1px solid #444;border-radius:4px}
-  canvas{image-rendering:pixelated;border:2px solid #333;background:#000}
-  button{padding:8px 14px;background:#0066cc;color:#fff;border:none;border-radius:5px;cursor:pointer;margin:4px}
-  button:hover{background:#0088ee}
-  button.sec{background:#333}
-  .info{margin:8px 0;color:#aaa;font-size:14px}
-  .status{background:#111;padding:6px 12px;font-size:12px;border-top:1px solid #222}
-  .colors{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-  .sw{width:22px;height:22px;border-radius:3px;cursor:pointer;border:1px solid #555}
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #0c0c0c; color: #e8e8e8; height: 100vh; display: flex; flex-direction: column; }
+  header { background: #141414; padding: 12px 20px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 18px; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 300px; background: #121212; padding: 16px; overflow-y: auto; border-right: 1px solid #222; }
+  .preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0a; padding: 20px; }
+  .options { width: 240px; background: #121212; padding: 16px; border-left: 1px solid #222; }
+  .cat { margin-bottom: 18px; }
+  .cat h3 { margin: 0 0 8px; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  select { width: 100%; padding: 8px; background: #1e1e1e; color: #fff; border: 1px solid #333; border-radius: 4px; }
+  canvas { image-rendering: pixelated; background: #000; border: 2px solid #333; }
+  button { padding: 10px 16px; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin: 6px 0; }
+  button:hover { background: #0088ff; }
+  button.sec { background: #2a2a2a; }
+  button.sec:hover { background: #3a3a3a; }
+  .sheet-preview { margin-top: 16px; text-align: center; }
+  .status { background: #111; padding: 8px 16px; font-size: 13px; border-top: 1px solid #222; }
+  .palette { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .swatch { width: 24px; height: 24px; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
 </style>
 </head>
 <body>
@@ -30,149 +31,203 @@
   <h1>Parasiders Character Generator</h1>
   <span>32×48 · 4 direcciones</span>
 </header>
-<div class="wrap">
-  <div class="col">
-    <div class="cat"><h3>Cabeza</h3><select id="head"></select></div>
-    <div class="cat"><h3>Torso</h3><select id="torso"></select></div>
-    <div class="cat"><h3>Piernas</h3><select id="legs"></select></div>
-    <button onclick="build()" style="width:100%">Generar 4 direcciones</button>
-  </div>
-  <div class="center">
-    <canvas id="cv" width="160" height="240"></canvas>
-    <div>
-      <button class="sec" onclick="nav(-1)">◀</button>
-      <span class="info" id="lbl">Abajo · 1</span>
-      <button class="sec" onclick="nav(1)">▶</button>
-    </div>
-    <button onclick="exportPNG()">Descargar spritesheet</button>
-  </div>
-  <div class="col right">
+
+<div class="main">
+  <div class="sidebar">
     <div class="cat">
-      <h3>Variaciones de color</h3>
-      <div class="colors" id="pal"></div>
-      <button onclick="randomizeColors()" style="width:100%">Aleatorizar colores</button>
+      <h3>Cabeza</h3>
+      <select id="head"></select>
     </div>
-    <p style="font-size:12px;color:#666">Partes reales de tus sprites en las 4 direcciones. Combina libremente.</p>
+    <div class="cat">
+      <h3>Torso</h3>
+      <select id="torso"></select>
+    </div>
+    <div class="cat">
+      <h3>Piernas</h3>
+      <select id="legs"></select>
+    </div>
+    <button onclick="generate()">Generar spritesheet completo</button>
+    <button class="sec" onclick="randomize()">Aleatorio</button>
+  </div>
+
+  <div class="preview">
+    <div class="sheet-preview">
+      <canvas id="sheet" width="128" height="192"></canvas>
+      <p style="font-size:13px; color:#888; margin:8px 0;">Spritesheet completo (4 direcciones × 4 frames)</p>
+    </div>
+    <button onclick="download()">Descargar PNG</button>
+  </div>
+
+  <div class="options">
+    <div class="cat">
+      <h3>Color</h3>
+      <div class="palette" id="palette"></div>
+      <button class="sec" onclick="applyColor()">Aplicar color a claros</button>
+    </div>
+    <p style="font-size:12px; color:#666;">
+      Combina partes de tus personajes.<br>
+      El spritesheet se muestra completo de una.
+    </p>
   </div>
 </div>
-<div class="status" id="st">Cargando partes...</div>
+
+<div class="status" id="status">Cargando...</div>
 
 <script>
-let lib = null, imageData = {}, cache = {}, frames = [], cur = 0;
-const FW=32, FH=48;
-const DIRS=["down","left","right","up"];
-const NAMES=["Abajo","Izquierda","Derecha","Arriba"];
-const PALETTE=["#ffffff","#ff4444","#44ff44","#4444ff","#ffff44","#ff44ff","#44ffff","#ffaa00","#aa44ff","#88ff88","#ff8888","#8888ff"];
+let bundle = null;
+let cache = {};
+let currentFrames = [];
+const FW = 32, FH = 48;
+const PALETTE = ["#ffffff","#ff5555","#55ff55","#5555ff","#ffff55","#ff55ff","#55ffff","#ffaa33","#aa55ff","#88ff88"];
 
-async function init(){
+async function init() {
   try {
-    const r = await fetch("parts_bundle.json");
-    const bundle = await r.json();
-    lib = bundle.library;
-    imageData = bundle.images;
-    fill("head", lib.heads.down);
-    fill("torso", lib.torsos.down);
-    fill("legs", lib.legs.down);
-    const pal = document.getElementById("pal");
-    PALETTE.forEach(c=>{
-      const d=document.createElement("div");
-      d.className="sw"; d.style.background=c;
-      d.onclick=()=>tint(c);
+    const res = await fetch("parts_bundle.json");
+    bundle = await res.json();
+    const lib = bundle.library;
+    fillSelect("head", lib.heads.down);
+    fillSelect("torso", lib.torsos.down);
+    fillSelect("legs", lib.legs.down);
+
+    const pal = document.getElementById("palette");
+    PALETTE.forEach(c => {
+      const d = document.createElement("div");
+      d.className = "swatch";
+      d.style.background = c;
+      d.onclick = () => document.getElementById("colorPick").value = c;
       pal.appendChild(d);
     });
-    document.getElementById("st").textContent = `Listo: ${lib.heads.down.length} cabezas × 4 direcciones`;
-    build();
-  } catch(e) {
-    document.getElementById("st").textContent = "Error cargando parts_bundle.json";
+    // hidden color input
+    const inp = document.createElement("input");
+    inp.type = "color";
+    inp.id = "colorPick";
+    inp.value = "#ffffff";
+    inp.style.display = "none";
+    document.body.appendChild(inp);
+
+    document.getElementById("status").textContent = "Listo. Elige partes y genera.";
+    generate();
+  } catch (e) {
+    document.getElementById("status").textContent = "Error al cargar partes. Recarga con Ctrl+F5.";
   }
 }
-function fill(id, arr){
-  const s=document.getElementById(id);
-  arr.forEach(p=>{
-    const o=document.createElement("option");
-    o.value=p;
-    o.text=p.replace(/_down_[htl]\.png|_Sprite.*|_down_.*/g,"").replace(/_/g," ");
-    s.appendChild(o);
+
+function fillSelect(id, list) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = "";
+  list.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name.replace(/_down_[htl]\.png/g, "").replace(/_/g, " ").replace(/ Sprite/g, "");
+    sel.appendChild(opt);
   });
 }
-async function img(name){
-  if(cache[name]) return cache[name];
-  const src = imageData[name];
-  if(!src) return null;
-  return new Promise(res=>{
-    const i=new Image();
-    i.onload=()=>{cache[name]=i;res(i)};
-    i.src=src;
+
+async function loadImage(name) {
+  if (cache[name]) return cache[name];
+  const src = bundle.images[name];
+  if (!src) return null;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => { cache[name] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
   });
 }
-async function build(){
-  const h=document.getElementById("head").value;
-  const t=document.getElementById("torso").value;
-  const l=document.getElementById("legs").value;
-  const baseH=h.replace("_down_h.png","");
-  const baseT=t.replace("_down_t.png","");
-  const baseL=l.replace("_down_l.png","");
-  frames=[];
-  for(let d=0;d<4;d++){
-    const dn=DIRS[d];
-    const hi=await img(baseH+"_"+dn+"_h.png");
-    const ti=await img(baseT+"_"+dn+"_t.png");
-    const li=await img(baseL+"_"+dn+"_l.png");
-    for(let f=0;f<4;f++){
-      const c=document.createElement("canvas");
-      c.width=FW; c.height=FH;
-      const ctx=c.getContext("2d");
-      if(li) ctx.drawImage(li,0,28);
-      if(ti) ctx.drawImage(ti,0,14);
-      if(hi) ctx.drawImage(hi,0,0);
-      frames.push(c);
+
+async function generate() {
+  const headBase = document.getElementById("head").value.replace("_down_h.png", "");
+  const torsoBase = document.getElementById("torso").value.replace("_down_t.png", "");
+  const legsBase = document.getElementById("legs").value.replace("_down_l.png", "");
+
+  const dirs = ["down", "left", "right", "up"];
+  currentFrames = [];
+
+  for (let d = 0; d < 4; d++) {
+    const dir = dirs[d];
+    const head = await loadImage(headBase + "_" + dir + "_h.png");
+    const torso = await loadImage(torsoBase + "_" + dir + "_t.png");
+    const legs = await loadImage(legsBase + "_" + dir + "_l.png");
+
+    for (let f = 0; f < 4; f++) {
+      const c = document.createElement("canvas");
+      c.width = FW; c.height = FH;
+      const ctx = c.getContext("2d");
+      if (legs) ctx.drawImage(legs, 0, 28);
+      if (torso) ctx.drawImage(torso, 0, 14);
+      if (head) ctx.drawImage(head, 0, 0);
+      currentFrames.push(c);
     }
   }
-  cur=0; draw();
-  document.getElementById("st").textContent="Generado (4 direcciones)";
+
+  drawSheet();
+  document.getElementById("status").textContent = "Spritesheet generado";
 }
-function draw(){
-  const cv=document.getElementById("cv");
-  const ctx=cv.getContext("2d");
-  ctx.imageSmoothingEnabled=false;
-  const sc=5;
-  cv.width=FW*sc; cv.height=FH*sc;
-  ctx.clearRect(0,0,cv.width,cv.height);
-  if(frames[cur]) ctx.drawImage(frames[cur],0,0,cv.width,cv.height);
-  const dir=Math.floor(cur/4);
-  document.getElementById("lbl").textContent=`${NAMES[dir]} · Frame ${(cur%4)+1}`;
-}
-function nav(d){cur=(cur+d+16)%16; draw();}
-function tint(color){
-  if(!frames.length) return;
-  const c=frames[cur];
-  const ctx=c.getContext("2d");
-  const data=ctx.getImageData(0,0,FW,FH);
-  const d=data.data;
-  const r=parseInt(color.substr(1,2),16), g=parseInt(color.substr(3,2),16), b=parseInt(color.substr(5,2),16);
-  for(let i=0;i<d.length;i+=4){
-    if(d[i+3]>10 && d[i]>180 && d[i+1]>180 && d[i+2]>180){
-      d[i]=r; d[i+1]=g; d[i+2]=b;
+
+function drawSheet() {
+  const sheet = document.getElementById("sheet");
+  const ctx = sheet.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  const scale = 3;
+  sheet.width = FW * 4 * scale;
+  sheet.height = FH * 4 * scale;
+  ctx.clearRect(0, 0, sheet.width, sheet.height);
+
+  for (let i = 0; i < 16; i++) {
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    if (currentFrames[i]) {
+      ctx.drawImage(currentFrames[i], col * FW * scale, row * FH * scale, FW * scale, FH * scale);
     }
   }
-  ctx.putImageData(data,0,0);
-  draw();
 }
-function randomizeColors(){
-  const c=PALETTE[Math.floor(Math.random()*PALETTE.length)];
-  tint(c);
+
+function randomize() {
+  const sels = ["head", "torso", "legs"];
+  sels.forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel.options.length) {
+      sel.selectedIndex = Math.floor(Math.random() * sel.options.length);
+    }
+  });
+  generate();
 }
-function exportPNG(){
-  if(!frames.length) return;
-  const s=document.createElement("canvas");
-  s.width=FW*4; s.height=FH*4;
-  const ctx=s.getContext("2d");
-  for(let i=0;i<16;i++) ctx.drawImage(frames[i],(i%4)*FW,Math.floor(i/4)*FH);
-  const a=document.createElement("a");
-  a.href=s.toDataURL("image/png");
-  a.download="parasiders_char.png";
+
+function applyColor() {
+  const color = document.getElementById("colorPick").value;
+  const r = parseInt(color.substr(1,2),16);
+  const g = parseInt(color.substr(3,2),16);
+  const b = parseInt(color.substr(5,2),16);
+
+  currentFrames.forEach(frame => {
+    const ctx = frame.getContext("2d");
+    const data = ctx.getImageData(0, 0, FW, FH);
+    const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i+3] > 20 && d[i] > 170 && d[i+1] > 170 && d[i+2] > 170) {
+        d[i] = r; d[i+1] = g; d[i+2] = b;
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+  });
+  drawSheet();
+}
+
+function download() {
+  if (!currentFrames.length) return;
+  const sheet = document.createElement("canvas");
+  sheet.width = FW * 4;
+  sheet.height = FH * 4;
+  const ctx = sheet.getContext("2d");
+  for (let i = 0; i < 16; i++) {
+    ctx.drawImage(currentFrames[i], (i%4)*FW, Math.floor(i/4)*FH);
+  }
+  const a = document.createElement("a");
+  a.href = sheet.toDataURL("image/png");
+  a.download = "parasiders_character.png";
   a.click();
 }
+
 init();
 </script>
 </body>
