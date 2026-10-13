@@ -11,7 +11,6 @@
   .main{display:flex;flex:1;overflow:hidden}
   .side{width:280px;background:#121212;padding:16px;overflow-y:auto;border-right:1px solid #222}
   .preview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a}
-  .opts{width:220px;background:#121212;padding:16px;border-left:1px solid #222}
   label{display:block;font-size:12px;color:#888;margin:12px 0 4px;text-transform:uppercase}
   select,input[type=color]{width:100%;padding:8px;background:#1e1e1e;color:#fff;border:1px solid #333;border-radius:4px}
   button{width:100%;padding:10px;margin:6px 0;background:#0066cc;color:#fff;border:none;border-radius:6px;cursor:pointer}
@@ -24,160 +23,148 @@
 <body>
 <header>
   <h1>Parasiders Generator</h1>
-  <span>32×48 · 4 direcciones</span>
+  <span>32×48 · 4 dir · contornos negros</span>
 </header>
 <div class="main">
   <div class="side">
     <label>Cabeza</label>
-    <select id="head"></select>
+    <select id="head">
+      <option value="normal">Normal</option>
+      <option value="hood">Capucha</option>
+      <option value="helmet">Casco</option>
+      <option value="hat">Sombrero</option>
+      <option value="horns">Cuernos</option>
+    </select>
     <label>Torso</label>
-    <select id="torso"></select>
+    <select id="torso">
+      <option value="shirt">Camisa</option>
+      <option value="armor">Armadura</option>
+      <option value="robe">Túnica</option>
+      <option value="jacket">Chaqueta</option>
+    </select>
     <label>Piernas</label>
-    <select id="legs"></select>
-    <label>Color principal</label>
-    <input type="color" id="mainColor" value="#c0c0c0">
+    <select id="legs">
+      <option value="pants">Pantalón</option>
+      <option value="armor">Armadura</option>
+      <option value="boots">Botas</option>
+    </select>
+    <label>Color ropa</label>
+    <input type="color" id="cloth" value="#374485">
     <label>Color secundario</label>
-    <input type="color" id="secColor" value="#808080">
+    <input type="color" id="sec" value="#642f2f">
     <button onclick="draw()">Generar</button>
-    <button class="sec" onclick="randomize()">Aleatorio</button>
+    <button class="sec" onclick="random()">Aleatorio</button>
   </div>
   <div class="preview">
     <canvas id="sheet" width="384" height="576"></canvas>
-    <p style="color:#888;font-size:13px">Spritesheet completo</p>
-    <button onclick="download()" style="width:auto;padding:8px 24px">Descargar</button>
-  </div>
-  <div class="opts">
-    <p style="font-size:13px;color:#aaa">Generador desde cero con estilo plano, siluetas claras y medidas de RPG Maker XP.</p>
+    <button onclick="dl()" style="width:auto;margin-top:12px;padding:8px 24px">Descargar</button>
   </div>
 </div>
-<div class="status" id="st">Listo</div>
+<div class="status" id="st">Estilo plano + contorno negro + piel blanca</div>
 
 <script>
-const FW=32, FH=48;
 const canvas = document.getElementById("sheet");
 const ctx = canvas.getContext("2d");
+const FW=32, FH=48;
 
-// Simple procedural parts matching flat pixel style
-const heads = ["normal","hood","helmet","hat","horns"];
-const torsos = ["shirt","armor","robe","jacket","naked"];
-const legs = ["pants","armor","skirt","boots","bare"];
+function px(x,y,c){ ctx.fillStyle=c; ctx.fillRect(x,y,1,1); }
 
-function fillSelect(id, arr){
-  const s = document.getElementById(id);
-  arr.forEach(v=>{
-    const o = document.createElement("option");
-    o.value = v; o.textContent = v;
-    s.appendChild(o);
-  });
-}
-fillSelect("head", heads);
-fillSelect("torso", torsos);
-fillSelect("legs", legs);
-
-function drawPixel(x,y,c){
-  ctx.fillStyle = c;
-  ctx.fillRect(x,y,1,1);
+function outlineRect(x,y,w,h,fill,outline="#000000"){
+  ctx.fillStyle = outline;
+  ctx.fillRect(x-1,y-1,w+2,h+2);
+  ctx.fillStyle = fill;
+  ctx.fillRect(x,y,w,h);
 }
 
-function drawCharacter(ox, oy, dir, frame){
-  const main = document.getElementById("mainColor").value;
-  const sec = document.getElementById("secColor").value;
-  const headType = document.getElementById("head").value;
-  const torsoType = document.getElementById("torso").value;
-  const legsType = document.getElementById("legs").value;
-
-  // Simple body based on direction and frame (bob)
-  const bob = (frame % 2) * 1;
+function drawChar(ox, oy, dir, frame){
+  const cloth = document.getElementById("cloth").value;
+  const sec = document.getElementById("sec").value;
+  const head = document.getElementById("head").value;
+  const torso = document.getElementById("torso").value;
+  const legs = document.getElementById("legs").value;
   const skin = "#ffffff";
+  const bob = (frame % 2);
 
   // Legs
   const ly = oy + 30 + bob;
-  if(legsType === "pants"){
-    ctx.fillStyle = sec;
-    ctx.fillRect(ox+10, ly, 5, 14);
-    ctx.fillRect(ox+17, ly, 5, 14);
-  } else if(legsType === "armor"){
-    ctx.fillStyle = main;
-    ctx.fillRect(ox+9, ly, 6, 15);
-    ctx.fillRect(ox+17, ly, 6, 15);
+  if(legs === "pants"){
+    outlineRect(ox+10, ly, 5, 14, sec);
+    outlineRect(ox+17, ly, 5, 14, sec);
+  } else if(legs === "armor"){
+    outlineRect(ox+9, ly, 6, 15, cloth);
+    outlineRect(ox+17, ly, 6, 15, cloth);
   } else {
-    ctx.fillStyle = skin;
-    ctx.fillRect(ox+11, ly, 4, 13);
-    ctx.fillRect(ox+17, ly, 4, 13);
+    outlineRect(ox+10, ly, 5, 14, "#4a3a2a");
+    outlineRect(ox+17, ly, 5, 14, "#4a3a2a");
   }
 
   // Torso
   const ty = oy + 16 + bob;
-  ctx.fillStyle = main;
-  if(torsoType === "armor"){
-    ctx.fillRect(ox+8, ty, 16, 16);
-  } else if(torsoType === "robe"){
-    ctx.fillRect(ox+7, ty, 18, 18);
+  if(torso === "armor"){
+    outlineRect(ox+8, ty, 16, 16, cloth);
+  } else if(torso === "robe"){
+    outlineRect(ox+7, ty, 18, 18, cloth);
   } else {
-    ctx.fillRect(ox+9, ty, 14, 15);
+    outlineRect(ox+9, ty, 14, 15, cloth);
   }
 
   // Head
   const hy = oy + 2 + bob;
-  ctx.fillStyle = skin;
-  ctx.fillRect(ox+10, hy, 12, 12);
+  outlineRect(ox+10, hy, 12, 12, skin);
 
-  // Head extras
-  if(headType === "hood"){
-    ctx.fillStyle = sec;
-    ctx.fillRect(ox+8, hy-2, 16, 8);
-  } else if(headType === "helmet"){
-    ctx.fillStyle = main;
-    ctx.fillRect(ox+9, hy-1, 14, 6);
-  } else if(headType === "hat"){
-    ctx.fillStyle = "#333";
-    ctx.fillRect(ox+8, hy-4, 16, 4);
-  } else if(headType === "horns"){
-    ctx.fillStyle = "#444";
-    ctx.fillRect(ox+8, hy, 3, 4);
-    ctx.fillRect(ox+21, hy, 3, 4);
+  // Extras
+  if(head === "hood"){
+    outlineRect(ox+8, hy-3, 16, 7, sec);
+  } else if(head === "helmet"){
+    outlineRect(ox+9, hy-2, 14, 6, cloth);
+  } else if(head === "hat"){
+    outlineRect(ox+7, hy-5, 18, 4, "#222");
+  } else if(head === "horns"){
+    outlineRect(ox+7, hy, 4, 5, "#333");
+    outlineRect(ox+21, hy, 4, 5, "#333");
   }
 
-  // Eyes (simple)
-  if(dir === 0 || dir === 1 || dir === 2){
-    ctx.fillStyle = "#000";
-    ctx.fillRect(ox+12, hy+5, 2, 2);
-    ctx.fillRect(ox+18, hy+5, 2, 2);
+  // Eyes
+  if(dir < 3){
+    px(ox+13, hy+5, "#000");
+    px(ox+14, hy+5, "#000");
+    px(ox+18, hy+5, "#000");
+    px(ox+19, hy+5, "#000");
   }
 }
 
 function draw(){
   ctx.imageSmoothingEnabled = false;
-  const scale = 3;
-  canvas.width = FW*4*scale;
-  canvas.height = FH*4*scale;
+  const sc = 3;
+  canvas.width = FW*4*sc;
+  canvas.height = FH*4*sc;
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.save();
-  ctx.scale(scale, scale);
-
-  for(let dir=0; dir<4; dir++){
+  ctx.scale(sc, sc);
+  for(let d=0; d<4; d++){
     for(let f=0; f<4; f++){
-      const x = f * FW;
-      const y = dir * FH;
-      drawCharacter(x, y, dir, f);
+      drawChar(f*FW, d*FH, d, f);
     }
   }
   ctx.restore();
   document.getElementById("st").textContent = "Generado";
 }
 
-function randomize(){
-  document.getElementById("head").selectedIndex = Math.floor(Math.random()*heads.length);
-  document.getElementById("torso").selectedIndex = Math.floor(Math.random()*torsos.length);
-  document.getElementById("legs").selectedIndex = Math.floor(Math.random()*legs.length);
-  document.getElementById("mainColor").value = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6,"0");
+function random(){
+  const heads = ["normal","hood","helmet","hat","horns"];
+  const torsos = ["shirt","armor","robe","jacket"];
+  const legs = ["pants","armor","boots"];
+  document.getElementById("head").value = heads[Math.floor(Math.random()*heads.length)];
+  document.getElementById("torso").value = torsos[Math.floor(Math.random()*torsos.length)];
+  document.getElementById("legs").value = legs[Math.floor(Math.random()*legs.length)];
+  document.getElementById("cloth").value = "#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0");
   draw();
 }
 
-function download(){
+function dl(){
   const a = document.createElement("a");
   a.href = canvas.toDataURL("image/png");
-  a.download = "parasiders_char.png";
+  a.download = "parasiders.png";
   a.click();
 }
 
