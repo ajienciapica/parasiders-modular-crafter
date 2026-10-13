@@ -2,207 +2,250 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Parasiders Modular Crafter - RPG Maker XP</title>
+<title>Parasiders Modular Crafter v2 - RPG Maker XP</title>
 <style>
-  body { font-family: Segoe UI, Arial, sans-serif; margin: 0; padding: 10px; background: #1a1a1a; color: #eee; display: flex; gap: 12px; height: 100vh; }
-  .panel { background: #2a2a2a; padding: 10px; border-radius: 6px; overflow-y: auto; }
-  .left { width: 260px; }
-  .center { flex: 1; display: flex; flex-direction: column; align-items: center; }
-  .right { width: 220px; }
-  canvas { border: 2px solid #555; background: #000; image-rendering: pixelated; }
-  button, select, input { margin: 3px 0; padding: 6px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  button:hover { background: #555; }
-  .part-slot { margin: 6px 0; padding: 6px; background: #333; border-radius: 4px; }
-  .preview-list { max-height: 200px; overflow-y: auto; }
-  .status { position: fixed; bottom: 0; left: 0; right: 0; background: #111; padding: 4px 10px; font-size: 12px; }
-  label { font-size: 13px; display: block; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; background: #121212; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+  header { background: #1e1e1e; padding: 10px 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 18px; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 280px; background: #1a1a1a; padding: 12px; overflow-y: auto; border-right: 1px solid #333; }
+  .preview-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 16px; background: #181818; }
+  .right { width: 240px; background: #1a1a1a; padding: 12px; overflow-y: auto; border-left: 1px solid #333; }
+  canvas { border: 2px solid #444; background: #000; image-rendering: pixelated; margin: 8px 0; }
+  select, button, input[type="color"] { width: 100%; margin: 4px 0; padding: 8px; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 4px; }
+  button { cursor: pointer; }
+  button:hover { background: #3a3a3a; }
+  .section { margin-bottom: 16px; }
+  .section h3 { margin: 0 0 8px 0; font-size: 14px; color: #aaa; }
+  .status { background: #111; padding: 6px 12px; font-size: 12px; border-top: 1px solid #333; }
+  .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 6px 0; }
+  .color-swatch { width: 28px; height: 28px; border: 2px solid #555; cursor: pointer; border-radius: 3px; }
+  .color-swatch.active { border-color: #fff; }
+  .frame-nav { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 </style>
 </head>
 <body>
 
-<div class="panel left">
-  <h3>Medidas RMXP</h3>
-  <select id="sizeSelect">
-    <option value="32x48">32×48 (más común)</option>
-    <option value="40x56">40×56</option>
-    <option value="48x64">48×64</option>
-  </select>
-
-  <h3>Cargar tus spritesheets</h3>
-  <input type="file" id="loadSheet" accept="image/png" multiple>
-  <p style="font-size:12px; color:#aaa;">Carga hojas existentes para extraer partes o usar como referencia.</p>
-
-  <h3>Partes del personaje</h3>
-  <div class="part-slot">
-    <label>Cabeza / Cara</label>
-    <input type="file" id="headFile" accept="image/png">
-  </div>
-  <div class="part-slot">
-    <label>Pelo / Gorro</label>
-    <input type="file" id="hairFile" accept="image/png">
-  </div>
-  <div class="part-slot">
-    <label>Torso / Ropa</label>
-    <input type="file" id="torsoFile" accept="image/png">
-  </div>
-  <div class="part-slot">
-    <label>Piernas / Pantalón</label>
-    <input type="file" id="legsFile" accept="image/png">
-  </div>
-  <div class="part-slot">
-    <label>Arma / Accesorio</label>
-    <input type="file" id="weaponFile" accept="image/png">
-  </div>
-
-  <h3>Color swap rápido</h3>
-  <label>Color origen: <input type="color" id="fromColor" value="#ffffff"></label>
-  <label>Color destino: <input type="color" id="toColor" value="#ffcc00"></label>
-  <button onclick="applyColorSwap()">Aplicar swap a frame actual</button>
-
-  <button onclick="composeCharacter()">Componer personaje</button>
-  <button onclick="exportSheet()">Exportar spritesheet RMXP</button>
-</div>
-
-<div class="panel center">
-  <canvas id="preview" width="128" height="192"></canvas>
-  <p>Preview del frame actual (se actualiza al componer)</p>
+<header>
+  <h1>Parasiders Modular Crafter</h1>
   <div>
-    <button onclick="prevFrame()">◀ Frame anterior</button>
-    <span id="frameInfo">Frame 0 / 15</span>
-    <button onclick="nextFrame()">Frame siguiente ▶</button>
+    <select id="sizeSelect" style="width: auto;">
+      <option value="32x48">32×48</option>
+      <option value="40x56">40×56</option>
+      <option value="48x64">48×64</option>
+    </select>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="section">
+      <h3>Cabeza</h3>
+      <select id="headSelect"><option value="">— Ninguna —</option></select>
+      <input type="file" id="uploadHead" accept="image/png" style="font-size:12px;">
+    </div>
+    <div class="section">
+      <h3>Pelo / Accesorio cabeza</h3>
+      <select id="hairSelect"><option value="">— Ninguno —</option></select>
+      <input type="file" id="uploadHair" accept="image/png" style="font-size:12px;">
+    </div>
+    <div class="section">
+      <h3>Torso / Ropa</h3>
+      <select id="torsoSelect"><option value="">— Ninguno —</option></select>
+      <input type="file" id="uploadTorso" accept="image/png" style="font-size:12px;">
+    </div>
+    <div class="section">
+      <h3>Piernas</h3>
+      <select id="legsSelect"><option value="">— Ningunas —</option></select>
+      <input type="file" id="uploadLegs" accept="image/png" style="font-size:12px;">
+    </div>
+    <div class="section">
+      <h3>Arma / Extra</h3>
+      <select id="weaponSelect"><option value="">— Ninguna —</option></select>
+      <input type="file" id="uploadWeapon" accept="image/png" style="font-size:12px;">
+    </div>
+    <button onclick="compose()">Componer spritesheet completo</button>
+    <button onclick="exportPNG()">Exportar PNG (RMXP)</button>
+  </div>
+
+  <div class="preview-area">
+    <canvas id="preview" width="128" height="192"></canvas>
+    <div class="frame-nav">
+      <button onclick="changeFrame(-1)" style="width:auto;">◀</button>
+      <span id="frameLabel">Dirección: Abajo · Frame 1</span>
+      <button onclick="changeFrame(1)" style="width:auto;">▶</button>
+    </div>
+    <p style="font-size:13px; color:#888; text-align:center; max-width:400px;">
+      El programa genera automáticamente las 4 direcciones × 4 frames.<br>
+      Sube partes cortadas de tus personajes (PNG transparente).
+    </p>
+  </div>
+
+  <div class="right">
+    <div class="section">
+      <h3>Color swap</h3>
+      <label style="font-size:12px;">Origen</label>
+      <input type="color" id="fromColor" value="#ffffff">
+      <label style="font-size:12px;">Destino</label>
+      <input type="color" id="toColor" value="#ffcc00">
+      <button onclick="swapColor()">Aplicar swap</button>
+    </div>
+    <div class="section">
+      <h3>Paleta rápida (estilo Parasiders)</h3>
+      <div class="color-grid" id="palette"></div>
+    </div>
+    <div class="section">
+      <h3>Cómo usar</h3>
+      <ol style="font-size:12px; padding-left:16px; color:#aaa;">
+        <li>Corta de tus spritesheets: cabeza, torso, piernas, etc. (PNG con transparencia).</li>
+        <li>Sube cada parte en su casilla.</li>
+        <li>Pulsa “Componer”.</li>
+        <li>Navega las direcciones.</li>
+        <li>Exporta.</li>
+      </ol>
+    </div>
   </div>
 </div>
 
-<div class="panel right">
-  <h3>Instrucciones rápidas</h3>
-  <ol style="font-size:13px; padding-left:18px;">
-    <li>Elige el tamaño de frame que usas.</li>
-    <li>Corta manualmente de tus spritesheets las partes (cabeza, torso, etc.) en PNGs pequeños transparentes.</li>
-    <li>Carga cada parte en su casilla.</li>
-    <li>Usa “Componer personaje” para ver el resultado.</li>
-    <li>Navega entre los 16 frames (4 direcciones × 4).</li>
-    <li>Aplica color swap si quieres reutilizar colores.</li>
-    <li>Exporta el PNG listo para RPG Maker XP.</li>
-  </ol>
-  <p style="font-size:12px; color:#aaa;">Tip: en Aseprite o Paint.NET corta las regiones y guarda con transparencia. Las partes deben tener el mismo tamaño de frame o menor.</p>
-</div>
-
-<div class="status" id="status">Listo. Carga partes de tus personajes existentes.</div>
+<div class="status" id="status">Listo. Sube partes de tus personajes y compón.</div>
 
 <script>
 const sizes = { "32x48": [32,48], "40x56": [40,56], "48x64": [48,64] };
 let fw = 32, fh = 48;
 let currentFrame = 0;
-let parts = { head: null, hair: null, torso: null, legs: null, weapon: null };
-let composed = [];
+const dirs = ["Abajo (frente)", "Izquierda", "Derecha", "Arriba (espalda)"];
+
+let library = {
+  head: {}, hair: {}, torso: {}, legs: {}, weapon: {}
+};
+let selected = { head: null, hair: null, torso: null, legs: null, weapon: null };
+let composedFrames = [];
 
 const preview = document.getElementById('preview');
-const pctx = preview.getContext('2d');
-const status = document.getElementById('status');
+const ctx = preview.getContext('2d');
+const statusEl = document.getElementById('status');
+
+const palette = ["#ffffff","#000000","#ff0000","#00aa00","#0000ff","#ffff00","#ff00ff","#00ffff","#808080","#c0c0c0","#800000","#008080","#ffa500","#800080","#4a4a4a"];
+const palDiv = document.getElementById('palette');
+palette.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'color-swatch';
+  s.style.background = c;
+  s.onclick = () => document.getElementById('toColor').value = c;
+  palDiv.appendChild(s);
+});
 
 document.getElementById('sizeSelect').onchange = e => {
   [fw, fh] = sizes[e.target.value];
-  preview.width = fw * 4;
-  preview.height = fh * 4;
-  status.textContent = `Tamaño cambiado a ${fw}×${fh}`;
+  statusEl.textContent = `Tamaño: ${fw}×${fh}`;
 };
 
-['head','hair','torso','legs','weapon'].forEach(part => {
-  document.getElementById(part + 'File').onchange = e => loadPart(e, part);
+function setupUpload(id, type) {
+  document.getElementById(id).onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const name = file.name.replace(/\.[^.]+$/, '');
+    const img = new Image();
+    img.onload = () => {
+      library[type][name] = img;
+      const sel = document.getElementById(type + 'Select');
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+      sel.value = name;
+      selected[type] = img;
+      statusEl.textContent = `Parte "${name}" añadida a ${type}`;
+    };
+    img.src = URL.createObjectURL(file);
+  };
+}
+setupUpload('uploadHead', 'head');
+setupUpload('uploadHair', 'hair');
+setupUpload('uploadTorso', 'torso');
+setupUpload('uploadLegs', 'legs');
+setupUpload('uploadWeapon', 'weapon');
+
+['head','hair','torso','legs','weapon'].forEach(t => {
+  document.getElementById(t + 'Select').onchange = e => {
+    selected[t] = library[t][e.target.value] || null;
+  };
 });
 
-function loadPart(e, name) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => {
-    parts[name] = img;
-    status.textContent = `Parte "${name}" cargada`;
-  };
-  img.src = URL.createObjectURL(file);
-}
-
-function composeCharacter() {
-  composed = [];
+function compose() {
+  composedFrames = [];
   for (let i = 0; i < 16; i++) {
     const c = document.createElement('canvas');
     c.width = fw; c.height = fh;
-    const ctx = c.getContext('2d');
-    if (parts.legs) ctx.drawImage(parts.legs, 0, 0, fw, fh);
-    if (parts.torso) ctx.drawImage(parts.torso, 0, 0, fw, fh);
-    if (parts.head) ctx.drawImage(parts.head, 0, 0, fw, fh);
-    if (parts.hair) ctx.drawImage(parts.hair, 0, 0, fw, fh);
-    if (parts.weapon) ctx.drawImage(parts.weapon, 0, 0, fw, fh);
-    composed.push(c);
+    const cctx = c.getContext('2d');
+    if (selected.legs) cctx.drawImage(selected.legs, 0, 0, fw, fh);
+    if (selected.torso) cctx.drawImage(selected.torso, 0, 0, fw, fh);
+    if (selected.head) cctx.drawImage(selected.head, 0, 0, fw, fh);
+    if (selected.hair) cctx.drawImage(selected.hair, 0, 0, fw, fh);
+    if (selected.weapon) cctx.drawImage(selected.weapon, 0, 0, fw, fh);
+    composedFrames.push(c);
   }
   redraw();
-  status.textContent = "Personaje compuesto (16 frames). Navega con los botones.";
+  statusEl.textContent = "Spritesheet compuesto (4 direcciones × 4 frames)";
 }
 
 function redraw() {
-  if (!composed.length) return;
-  pctx.imageSmoothingEnabled = false;
-  pctx.clearRect(0, 0, preview.width, preview.height);
-  const scale = 4;
+  if (!composedFrames.length) return;
+  ctx.imageSmoothingEnabled = false;
+  const scale = 5;
   preview.width = fw * scale;
   preview.height = fh * scale;
-  pctx.drawImage(composed[currentFrame], 0, 0, fw * scale, fh * scale);
-  document.getElementById('frameInfo').textContent = `Frame ${currentFrame} / 15`;
+  ctx.clearRect(0, 0, preview.width, preview.height);
+  ctx.drawImage(composedFrames[currentFrame], 0, 0, preview.width, preview.height);
+  const dir = Math.floor(currentFrame / 4);
+  const fr = (currentFrame % 4) + 1;
+  document.getElementById('frameLabel').textContent = `Dirección: ${dirs[dir]} · Frame ${fr}`;
 }
 
-function prevFrame() {
-  currentFrame = (currentFrame - 1 + 16) % 16;
-  redraw();
-}
-function nextFrame() {
-  currentFrame = (currentFrame + 1) % 16;
+function changeFrame(delta) {
+  currentFrame = (currentFrame + delta + 16) % 16;
   redraw();
 }
 
-function applyColorSwap() {
-  if (!composed.length) return alert("Primero compón el personaje");
+function swapColor() {
+  if (!composedFrames.length) return;
   const from = document.getElementById('fromColor').value;
   const to = document.getElementById('toColor').value;
-  const c = composed[currentFrame];
-  const ctx = c.getContext('2d');
-  const imgData = ctx.getImageData(0, 0, fw, fh);
-  const data = imgData.data;
-  const fr = parseInt(from.substr(1,2),16);
-  const fg = parseInt(from.substr(3,2),16);
-  const fb = parseInt(from.substr(5,2),16);
-  const tr = parseInt(to.substr(1,2),16);
-  const tg = parseInt(to.substr(3,2),16);
-  const tb = parseInt(to.substr(5,2),16);
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i] === fr && data[i+1] === fg && data[i+2] === fb) {
-      data[i] = tr; data[i+1] = tg; data[i+2] = tb;
+  const c = composedFrames[currentFrame];
+  const cctx = c.getContext('2d');
+  const data = cctx.getImageData(0, 0, fw, fh);
+  const d = data.data;
+  const fr = parseInt(from.slice(1,3),16), fg = parseInt(from.slice(3,5),16), fb = parseInt(from.slice(5,7),16);
+  const tr = parseInt(to.slice(1,3),16), tg = parseInt(to.slice(3,5),16), tb = parseInt(to.slice(5,7),16);
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i]===fr && d[i+1]===fg && d[i+2]===fb) {
+      d[i]=tr; d[i+1]=tg; d[i+2]=tb;
     }
   }
-  ctx.putImageData(imgData, 0, 0);
+  cctx.putImageData(data, 0, 0);
   redraw();
-  status.textContent = "Color swap aplicado al frame actual";
+  statusEl.textContent = "Color swap aplicado";
 }
 
-function exportSheet() {
-  if (!composed.length) return alert("Primero compón el personaje");
+function exportPNG() {
+  if (!composedFrames.length) return alert("Primero compón el personaje");
   const sheet = document.createElement('canvas');
   sheet.width = fw * 4;
   sheet.height = fh * 4;
   const sctx = sheet.getContext('2d');
   for (let i = 0; i < 16; i++) {
-    const col = i % 4;
-    const row = Math.floor(i / 4);
-    sctx.drawImage(composed[i], col * fw, row * fh);
+    sctx.drawImage(composedFrames[i], (i%4)*fw, Math.floor(i/4)*fh);
   }
   const a = document.createElement('a');
   a.href = sheet.toDataURL('image/png');
-  a.download = `parasiders_character_${fw}x${fh}.png`;
+  a.download = `parasiders_${fw}x${fh}.png`;
   a.click();
-  status.textContent = "Spritesheet exportado (listo para RPG Maker XP)";
+  statusEl.textContent = "Exportado listo para RPG Maker XP";
 }
 
-preview.width = fw * 4;
-preview.height = fh * 4;
+preview.width = fw * 5;
+preview.height = fh * 5;
 </script>
 </body>
 </html>
