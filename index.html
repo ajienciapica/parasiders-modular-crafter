@@ -20,7 +20,6 @@
   button:hover { background: #0088ff; }
   button.sec { background: #2a2a2a; }
   button.sec:hover { background: #3a3a3a; }
-  .sheet-preview { margin-top: 16px; text-align: center; }
   .status { background: #111; padding: 8px 16px; font-size: 13px; border-top: 1px solid #222; }
   .palette { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
   .swatch { width: 24px; height: 24px; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
@@ -29,7 +28,7 @@
 <body>
 <header>
   <h1>Parasiders Character Generator</h1>
-  <span>32×48 · 4 direcciones</span>
+  <span>32×48 · 4 direcciones · 4 frames</span>
 </header>
 
 <div class="main">
@@ -46,28 +45,23 @@
       <h3>Piernas</h3>
       <select id="legs"></select>
     </div>
-    <button onclick="generate()">Generar spritesheet completo</button>
+    <button onclick="generate()">Generar spritesheet</button>
     <button class="sec" onclick="randomize()">Aleatorio</button>
   </div>
 
   <div class="preview">
-    <div class="sheet-preview">
-      <canvas id="sheet" width="128" height="192"></canvas>
-      <p style="font-size:13px; color:#888; margin:8px 0;">Spritesheet completo (4 direcciones × 4 frames)</p>
-    </div>
+    <canvas id="sheet" width="384" height="576"></canvas>
+    <p style="font-size:13px; color:#888;">Spritesheet completo (4 dir × 4 frames reales)</p>
     <button onclick="download()">Descargar PNG</button>
   </div>
 
   <div class="options">
     <div class="cat">
-      <h3>Color</h3>
+      <h3>Color de piel / claros</h3>
       <div class="palette" id="palette"></div>
-      <button class="sec" onclick="applyColor()">Aplicar color a claros</button>
+      <button class="sec" onclick="applyColor()">Aplicar color</button>
     </div>
-    <p style="font-size:12px; color:#666;">
-      Combina partes de tus personajes.<br>
-      El spritesheet se muestra completo de una.
-    </p>
+    <p style="font-size:12px; color:#666;">Ahora usa los 4 frames reales de cada dirección.</p>
   </div>
 </div>
 
@@ -82,43 +76,43 @@ const PALETTE = ["#ffffff","#ff5555","#55ff55","#5555ff","#ffff55","#ff55ff","#5
 
 async function init() {
   try {
-    const res = await fetch("parts_bundle.json");
+    const res = await fetch("parts_full_bundle.json");
     bundle = await res.json();
     const lib = bundle.library;
-    fillSelect("head", lib.heads.down);
-    fillSelect("torso", lib.torsos.down);
-    fillSelect("legs", lib.legs.down);
+
+    // Group by character base (remove _down_f0_h.png etc)
+    const bases = [...new Set(lib.heads.down.map(n => n.replace(/_down_f\d_h\.png$/, "")))];
+    fillSelect("head", bases, "_down_f0_h.png");
+    fillSelect("torso", [...new Set(lib.torsos.down.map(n => n.replace(/_down_f\d_t\.png$/, "")))], "_down_f0_t.png");
+    fillSelect("legs", [...new Set(lib.legs.down.map(n => n.replace(/_down_f\d_l\.png$/, "")))], "_down_f0_l.png");
 
     const pal = document.getElementById("palette");
     PALETTE.forEach(c => {
       const d = document.createElement("div");
       d.className = "swatch";
       d.style.background = c;
+      d.dataset.color = c;
       d.onclick = () => document.getElementById("colorPick").value = c;
       pal.appendChild(d);
     });
-    // hidden color input
     const inp = document.createElement("input");
-    inp.type = "color";
-    inp.id = "colorPick";
-    inp.value = "#ffffff";
-    inp.style.display = "none";
+    inp.type = "color"; inp.id = "colorPick"; inp.value = "#ffffff"; inp.style.display = "none";
     document.body.appendChild(inp);
 
-    document.getElementById("status").textContent = "Listo. Elige partes y genera.";
+    document.getElementById("status").textContent = "Listo";
     generate();
   } catch (e) {
-    document.getElementById("status").textContent = "Error al cargar partes. Recarga con Ctrl+F5.";
+    document.getElementById("status").textContent = "Error cargando. Ctrl+F5";
   }
 }
 
-function fillSelect(id, list) {
+function fillSelect(id, bases, suffix) {
   const sel = document.getElementById(id);
   sel.innerHTML = "";
-  list.forEach(name => {
+  bases.forEach(base => {
     const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name.replace(/_down_[htl]\.png/g, "").replace(/_/g, " ").replace(/ Sprite/g, "");
+    opt.value = base;
+    opt.textContent = base.replace(/_/g, " ").replace(/ Sprite/g, "");
     sel.appendChild(opt);
   });
 }
@@ -136,20 +130,20 @@ async function loadImage(name) {
 }
 
 async function generate() {
-  const headBase = document.getElementById("head").value.replace("_down_h.png", "");
-  const torsoBase = document.getElementById("torso").value.replace("_down_t.png", "");
-  const legsBase = document.getElementById("legs").value.replace("_down_l.png", "");
+  const headBase = document.getElementById("head").value;
+  const torsoBase = document.getElementById("torso").value;
+  const legsBase = document.getElementById("legs").value;
 
   const dirs = ["down", "left", "right", "up"];
   currentFrames = [];
 
   for (let d = 0; d < 4; d++) {
     const dir = dirs[d];
-    const head = await loadImage(headBase + "_" + dir + "_h.png");
-    const torso = await loadImage(torsoBase + "_" + dir + "_t.png");
-    const legs = await loadImage(legsBase + "_" + dir + "_l.png");
-
     for (let f = 0; f < 4; f++) {
+      const head = await loadImage(`${headBase}_${dir}_f${f}_h.png`);
+      const torso = await loadImage(`${torsoBase}_${dir}_f${f}_t.png`);
+      const legs = await loadImage(`${legsBase}_${dir}_f${f}_l.png`);
+
       const c = document.createElement("canvas");
       c.width = FW; c.height = FH;
       const ctx = c.getContext("2d");
@@ -161,7 +155,7 @@ async function generate() {
   }
 
   drawSheet();
-  document.getElementById("status").textContent = "Spritesheet generado";
+  document.getElementById("status").textContent = "Generado con frames reales";
 }
 
 function drawSheet() {
@@ -183,12 +177,9 @@ function drawSheet() {
 }
 
 function randomize() {
-  const sels = ["head", "torso", "legs"];
-  sels.forEach(id => {
+  ["head", "torso", "legs"].forEach(id => {
     const sel = document.getElementById(id);
-    if (sel.options.length) {
-      sel.selectedIndex = Math.floor(Math.random() * sel.options.length);
-    }
+    if (sel.options.length) sel.selectedIndex = Math.floor(Math.random() * sel.options.length);
   });
   generate();
 }
@@ -204,7 +195,7 @@ function applyColor() {
     const data = ctx.getImageData(0, 0, FW, FH);
     const d = data.data;
     for (let i = 0; i < d.length; i += 4) {
-      if (d[i+3] > 20 && d[i] > 170 && d[i+1] > 170 && d[i+2] > 170) {
+      if (d[i+3] > 20 && d[i] > 160 && d[i+1] > 160 && d[i+2] > 160) {
         d[i] = r; d[i+1] = g; d[i+2] = b;
       }
     }
