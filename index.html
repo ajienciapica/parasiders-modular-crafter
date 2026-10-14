@@ -1,174 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Parasiders Generator</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PARASIDERS — Modular Sprite Crafter</title>
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,sans-serif;background:#0e0e0e;color:#eee;height:100vh;display:flex;flex-direction:column}
-  header{background:#161616;padding:12px 20px;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center}
-  h1{margin:0;font-size:18px}
-  .main{display:flex;flex:1;overflow:hidden}
-  .side{width:280px;background:#121212;padding:16px;overflow-y:auto;border-right:1px solid #222}
-  .preview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a}
-  label{display:block;font-size:12px;color:#888;margin:12px 0 4px;text-transform:uppercase}
-  select,input[type=color]{width:100%;padding:8px;background:#1e1e1e;color:#fff;border:1px solid #333;border-radius:4px}
-  button{width:100%;padding:10px;margin:6px 0;background:#0066cc;color:#fff;border:none;border-radius:6px;cursor:pointer}
-  button:hover{background:#0088ff}
-  button.sec{background:#2a2a2a}
-  canvas{image-rendering:pixelated;border:2px solid #333;background:#000}
-  .status{background:#111;padding:8px 16px;font-size:13px;border-top:1px solid #222}
+:root{--bg:#11120f;--panel:#1b1d18;--line:#34382d;--text:#f0f0e8;--muted:#a7ad9b;--red:#ac2517;--yellow:#f3d847;--green:#b6ed48}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,sans-serif}header{padding:22px clamp(16px,4vw,42px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}h1{font-size:clamp(22px,3vw,32px);margin:0;letter-spacing:-.04em}h1 span{color:var(--yellow)}header p{color:var(--muted);margin:5px 0 0}.tag{border:1px solid #4a4f3c;border-radius:99px;padding:6px 10px;color:var(--green);font-size:12px}
+main{max-width:1280px;margin:auto;padding:22px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.panel h2{font-size:16px;margin:0 0 14px}.preview-wrap{background-color:#141611;background-image:linear-gradient(45deg,#20231c 25%,transparent 25%),linear-gradient(-45deg,#20231c 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#20231c 75%),linear-gradient(-45deg,transparent 75%,#20231c 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;border:1px solid #353a2d;border-radius:10px;display:flex;justify-content:center;align-items:center;min-height:310px;padding:22px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;height:auto}#preview{width:256px;height:384px} .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;color:var(--muted)}select,input[type=color]{width:100%;background:#11130f;color:var(--text);border:1px solid #424736;border-radius:8px;padding:10px;font:inherit;min-height:40px}input[type=color]{padding:4px;height:40px}.wide{grid-column:1/-1}button{cursor:pointer;border:1px solid #505642;background:#272b21;color:var(--text);border-radius:9px;padding:10px 13px;font:600 13px system-ui}button:hover{border-color:var(--green)}button.primary{background:var(--yellow);color:#17190f;border-color:var(--yellow)}button.danger{border-color:#6b2c25;color:#ffb3a7}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.hint{font-size:12px;color:var(--muted);margin:12px 0 0}.directions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.dir{background:#13150f;border:1px solid var(--line);border-radius:8px;padding:9px 4px;text-align:center;font-size:11px;color:var(--muted)}.dir canvas{width:64px;height:96px;display:block;margin:auto auto 5px}.parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.part{border:1px solid var(--line);border-radius:9px;padding:10px}.part strong{display:block;font-size:13px;margin-bottom:3px}.part small{color:var(--muted);display:block;margin-bottom:7px}.part select{padding:8px;min-height:36px}.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--green);margin:20px 0 10px}.asset-list{display:flex;gap:8px;flex-wrap:wrap}.asset-list img{width:60px;height:90px;object-fit:contain;image-rendering:pixelated;background:#11130f;border:1px solid var(--line);border-radius:6px;padding:4px}.status{font-size:12px;color:var(--green);min-height:18px;margin-top:8px}.note{border-left:3px solid var(--yellow);padding:10px 12px;background:#202219;border-radius:0 8px 8px 0;color:#c9cdbf;font-size:12px;margin-top:14px}footer{max-width:1280px;margin:0 auto;padding:0 22px 26px;color:var(--muted);font-size:12px}
+@media(max-width:850px){main{grid-template-columns:1fr;padding:12px}.panel{padding:14px}header{padding:18px}.controls{grid-template-columns:1fr 1fr}}@media(max-width:420px){.controls,.parts{grid-template-columns:1fr}.wide{grid-column:auto}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Parasiders Generator</h1>
-  <span>32×48 · 4 dir · contornos negros</span>
-</header>
-<div class="main">
-  <div class="side">
-    <label>Cabeza</label>
-    <select id="head">
-      <option value="normal">Normal</option>
-      <option value="hood">Capucha</option>
-      <option value="helmet">Casco</option>
-      <option value="hat">Sombrero</option>
-      <option value="horns">Cuernos</option>
-    </select>
-    <label>Torso</label>
-    <select id="torso">
-      <option value="shirt">Camisa</option>
-      <option value="armor">Armadura</option>
-      <option value="robe">Túnica</option>
-      <option value="jacket">Chaqueta</option>
-    </select>
-    <label>Piernas</label>
-    <select id="legs">
-      <option value="pants">Pantalón</option>
-      <option value="armor">Armadura</option>
-      <option value="boots">Botas</option>
-    </select>
-    <label>Color ropa</label>
-    <input type="color" id="cloth" value="#374485">
-    <label>Color secundario</label>
-    <input type="color" id="sec" value="#642f2f">
-    <button onclick="draw()">Generar</button>
-    <button class="sec" onclick="random()">Aleatorio</button>
-  </div>
-  <div class="preview">
-    <canvas id="sheet" width="384" height="576"></canvas>
-    <button onclick="dl()" style="width:auto;margin-top:12px;padding:8px 24px">Descargar</button>
-  </div>
+<header><div><h1><span>PARASIDERS</span> / SPRITE CRAFTER</h1><p>Generador modular de personajes · RPG Maker XP · Pixel art sin suavizado</p></div><div class="tag">32 × 48 por fotograma · hoja 128 × 192</div></header>
+<main>
+<section class="panel">
+<h2>Vista previa del personaje</h2>
+<div class="preview-wrap"><canvas id="preview" width="128" height="192" aria-label="Hoja de sprites generada"></canvas></div>
+<div class="directions" id="directions"></div>
+<div class="actions"><button class="primary" id="download">Exportar PNG 128 × 192</button><button id="random">Combinación aleatoria</button><button id="reset">Restablecer</button></div>
+<div class="status" id="status" aria-live="polite"></div>
+<p class="hint">La hoja se exporta con fondo transparente y sin interpolación. Cuatro columnas = fotogramas; cuatro filas = direcciones.</p>
+<div class="note">Prototipo de composición modular: las piezas dibujadas son una biblioteca inicial original de ejemplo. Revisa el resultado dentro de tu proyecto antes de sustituir sprites de producción.</div>
+</section>
+<section class="panel">
+<h2>Construye tu personaje</h2>
+<div class="section-label">Piezas y equipamiento</div>
+<div class="parts" id="parts"></div>
+<div class="section-label">Paleta limitada</div>
+<div class="controls">
+<div class="field"><label for="primary">Color principal</label><input type="color" id="primary" value="#48b7ff"></div>
+<div class="field"><label for="shadow">Sombra / contorno</label><input type="color" id="shadow" value="#123b63"></div>
+<div class="field"><label for="accent">Color de acento</label><input type="color" id="accent" value="#f3d847"></div>
+<div class="field"><label for="skin">Piel / hueso</label><input type="color" id="skin" value="#e8d7aa"></div>
+<div class="field wide"><label for="palette">Paleta predefinida</label><select id="palette"><option value="blue">Caballero azul</option><option value="green">Esqueleto verde</option><option value="red">Carmesí</option><option value="bone">Hueso y hierro</option><option value="purple">Arcano violeta</option><option value="custom">Personalizada</option></select></div>
 </div>
-<div class="status" id="st">Estilo plano + contorno negro + piel blanca</div>
-
+<div class="section-label">Referencias originales</div>
+<div class="asset-list"><img src="assets/Baltasar_Sprite.png" alt="Referencia Baltasar"><img src="assets/Blueknight_Sprite.png" alt="Referencia Blueknight"></div>
+<p class="hint">Las referencias se incluyen para comparación visual. No se deforman ni se usan como textura automática para las piezas nuevas.</p>
+</section>
+</main>
+<footer>PARASIDERS Modular Sprite Crafter · Exportación local en tu navegador. No sube imágenes a ningún servidor.</footer>
 <script>
-const canvas = document.getElementById("sheet");
-const ctx = canvas.getContext("2d");
-const FW=32, FH=48;
-
-function px(x,y,c){ ctx.fillStyle=c; ctx.fillRect(x,y,1,1); }
-
-function outlineRect(x,y,w,h,fill,outline="#000000"){
-  ctx.fillStyle = outline;
-  ctx.fillRect(x-1,y-1,w+2,h+2);
-  ctx.fillStyle = fill;
-  ctx.fillRect(x,y,w,h);
+const $=id=>document.getElementById(id);
+const options={
+head:[["Sin casco","none"],["Casco cerrado","helmet"],["Capucha","hood"],["Cráneo","skull"]],
+body:[["Túnica","tunic"],["Armadura","armor"],["Túnica de mago","robe"],["Chaqueta","jacket"]],
+legs:[["Botas simples","boots"],["Grebas","greaves"],["Pantalón","pants"]],
+weapon:[["Sin arma","none"],["Espada","sword"],["Bastón","staff"],["Hacha","axe"]],
+back:[["Sin accesorio","none"],["Capa","cape"],["Mochila","pack"]],
+detail:[["Sin detalle","none"],["Hombreras","pauldrons"],["Cinturón","belt"],["Amuleto","amulet"]]
+};
+const defaults={head:"helmet",body:"armor",legs:"greaves",weapon:"sword",back:"cape",detail:"pauldrons"};
+let state={...defaults};
+const paletteSets={
+blue:{primary:"#48b7ff",shadow:"#123b63",accent:"#d5eaff",skin:"#d3b99b"},
+green:{primary:"#4bdf32",shadow:"#145d16",accent:"#9aff5b",skin:"#b8f28c"},
+red:{primary:"#d94735",shadow:"#651c22",accent:"#f3d847",skin:"#f0d4b5"},
+bone:{primary:"#c6c5b6",shadow:"#41443d",accent:"#e8d7aa",skin:"#f3ead0"},
+purple:{primary:"#b98aff",shadow:"#4a2877",accent:"#f3d847",skin:"#d9c1f0"}
+};
+const color=id=>$(id).value;
+const partsMeta=[["head","Cabeza","Casco, capucha o cráneo"],["body","Torso","Silueta del cuerpo"],["legs","Piernas","Grebas, botas o pantalón"],["weapon","Mano / arma","Arma simple en silueta"],["back","Espalda","Capa o mochila"],["detail","Detalles","Piezas pequeñas"]];
+function buildControls(){ $('parts').innerHTML=partsMeta.map(([key,title,desc])=>`<div class="part"><strong>${title}</strong><small>${desc}</small><select data-part="${key}">${options[key].map(([label,val])=>`<option value="${val}" ${state[key]===val?'selected':''}>${label}</option>`).join('')}</select></div>`).join('');$('parts').querySelectorAll('select').forEach(s=>s.addEventListener('change',e=>{state[e.target.dataset.part]=e.target.value;drawAll()}));}
+function rect(ctx,x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x*2,y*2,w*2,h*2)}
+function line(ctx,pts,c){pts.forEach(([x,y])=>rect(ctx,x,y,1,1,c))}
+function drawCharacter(ctx,dir,frame){
+ ctx.clearRect(0,0,32,48);
+ const p=color('primary'),s=color('shadow'),a=color('accent'),sk=color('skin');
+ // body coordinates are on a 16x24 pixel grid, each logical pixel becomes 2x2 output pixels.
+ // subtle alternating walk frames, without smoothing or fractional coordinates.
+ const step=(frame===1||frame===3)?1:0, bob=(frame===1||frame===3)?0:0;
+ const side=(dir===1||dir===2), back=(dir===3), flip=dir===2;
+ ctx.save(); if(flip){ctx.translate(32,0);ctx.scale(-1,1)}
+ // cape/back accessory
+ if(state.back==="cape") {line(ctx,[[5,8],[4,9],[4,10],[4,11],[5,12],[5,13],[6,14],[6,15]],s);line(ctx,[[5,9],[5,10],[5,11],[6,12],[6,13],[7,14]],p)}
+ if(state.back==="pack"){line(ctx,[[4,8],[4,9],[5,9],[5,12],[4,12]],s);line(ctx,[[5,9],[5,11]],a)}
+ // legs
+ const legColor=state.legs==="greaves"?p:state.legs==="pants"?s:s;
+ if(!side){
+  line(ctx,[[6,16],[6,17],[6,18],[7,18],[7,19],[6,20],[6+step,21],[5+step,21],[5+step,22],[7+step,22]],s);
+  line(ctx,[[9,16],[9,17],[10,18],[10,19],[9-step,20],[9-step,21],[8-step,21],[8-step,22],[10-step,22]],s);
+  if(state.legs==="greaves"){line(ctx,[[6,18],[7,18],[7,19],[6,20],[9,18],[10,18],[10,19],[9,20]],p);line(ctx,[[6,21],[7,21],[9,21],[10,21]],a)}
+  else if(state.legs==="pants"){line(ctx,[[6,17],[7,18],[7,20],[9,17],[9,19],[8,20]],p)}
+  else{line(ctx,[[5+step,22],[7+step,22],[8-step,22],[10-step,22]],a)}
+ }else{
+  line(ctx,[[6,16],[6,18],[6+step,20],[5+step,21],[5+step,22],[7+step,22]],s);line(ctx,[[8,16],[9,18],[9-step,20],[8-step,21],[8-step,22],[10-step,22]],s);
+  if(state.legs==="greaves"){line(ctx,[[6,18],[7,19],[6+step,20],[9,18],[9-step,20]],p);line(ctx,[[6,21],[7,21],[9,21]],a)}
+ }
+ // torso silhouette
+ line(ctx,[[6,7],[7,6],[9,6],[10,7],[11,8],[11,13],[10,15],[6,15],[5,13],[5,8]],s);
+ if(state.body==="tunic"){line(ctx,[[7,7],[9,7],[10,8],[10,13],[9,14],[7,14],[6,13],[6,8]],p);line(ctx,[[7,13],[9,13]],a)}
+ else if(state.body==="robe"){line(ctx,[[7,7],[9,7],[10,8],[10,14],[9,16],[6,16],[5,14],[6,8]],p);line(ctx,[[7,8],[8,9],[9,8]],a)}
+ else if(state.body==="jacket"){line(ctx,[[7,7],[9,7],[10,8],[10,13],[9,14],[7,14],[6,13],[6,8]],s);line(ctx,[[7,7],[8,8],[8,13],[7,14],[6,13],[6,8]],p);line(ctx,[[9,8],[9,13]],a)}
+ else {line(ctx,[[7,7],[9,7],[10,8],[10,13],[9,14],[7,14],[6,13],[6,8]],p);line(ctx,[[7,8],[9,8],[9,10],[7,10]],s);line(ctx,[[8,8],[8,13]],a)}
+ // arms
+ line(ctx,[[5,8],[4,9],[4,11],[5,12],[6,11],[6,9]],s);line(ctx,[[10,8],[11,9],[11,11],[10,12],[9,11],[10,9]],s);
+ line(ctx,[[5,9],[5,11],[6,10]],p);line(ctx,[[10,9],[10,11]],p);
+ if(state.detail==="pauldrons"){line(ctx,[[5,7],[6,7],[6,8],[5,8],[10,7],[11,7],[11,8],[10,8]],a)}
+ if(state.detail==="belt"){line(ctx,[[6,12],[10,12]],a);rect(ctx,8,12,1,1,s)}
+ if(state.detail==="amulet"){line(ctx,[[8,9],[8,10],[9,10]],a)}
+ // head, side view shifts facial details and torso line
+ if(state.head==="none"){line(ctx,[[7,4],[9,4],[10,5],[10,6],[6,6],[6,5]],s)}
+ else if(state.head==="helmet"){
+  line(ctx,[[6,2],[7,1],[9,1],[10,2],[10,5],[9,6],[7,6],[6,5]],s);
+  line(ctx,[[7,2],[9,2],[9,4],[7,4]],p);
+  if(!back){line(ctx,[[7,5],[9,5]],a)} else line(ctx,[[7,3],[9,3]],a);
+  if(state.detail!=="none") line(ctx,[[8,1],[8,2]],a);
+ }else if(state.head==="hood"){
+  line(ctx,[[6,2],[7,1],[9,1],[10,2],[11,4],[10,6],[6,6],[5,4]],s);
+  line(ctx,[[7,2],[9,2],[10,4],[9,5],[7,5],[6,4]],p);
+  if(!back) line(ctx,[[7,4],[9,4]],s);
+ }else{
+  line(ctx,[[6,2],[7,1],[9,1],[10,2],[10,5],[9,6],[7,6],[6,5]],s);
+  line(ctx,[[7,2],[9,2],[9,4],[7,4]],sk);
+  line(ctx,[[7,3],[7,4],[9,3],[9,4]],s);
+  if(!back) line(ctx,[[7,5],[9,5]],s);
+ }
+ // side/back directional adjustments: side shows a single visor/face pixel; back hides face
+ if(side){line(ctx,[[8,3],[9,3]],s); if(state.head==="helmet") line(ctx,[[8,4],[9,4]],a)}
+ if(back){line(ctx,[[7,3],[9,3]],s);line(ctx,[[7,4],[9,4]],p)}
+ // weapon in front of body, simple readable silhouette
+ if(state.weapon!=="none"){
+  if(state.weapon==="sword"){line(ctx,[[12,8],[12,7],[13,6],[13,5],[14,4]],s);line(ctx,[[13,6],[14,5]],a);line(ctx,[[11,10],[13,8]],a);line(ctx,[[12,10],[13,9]],s)}
+  if(state.weapon==="staff"){line(ctx,[[12,4],[12,5],[12,6],[12,7],[12,8],[12,9],[12,10],[12,11],[12,12],[12,13]],s);line(ctx,[[12,4],[13,4],[13,5]],a)}
+  if(state.weapon==="axe"){line(ctx,[[12,7],[12,8],[12,9],[12,10],[12,11],[12,12]],s);line(ctx,[[11,6],[12,5],[14,5],[14,7],[12,7]],a);line(ctx,[[12,6],[13,6]],s)}
+ }
+ ctx.restore();
 }
-
-function drawChar(ox, oy, dir, frame){
-  const cloth = document.getElementById("cloth").value;
-  const sec = document.getElementById("sec").value;
-  const head = document.getElementById("head").value;
-  const torso = document.getElementById("torso").value;
-  const legs = document.getElementById("legs").value;
-  const skin = "#ffffff";
-  const bob = (frame % 2);
-
-  // Legs
-  const ly = oy + 30 + bob;
-  if(legs === "pants"){
-    outlineRect(ox+10, ly, 5, 14, sec);
-    outlineRect(ox+17, ly, 5, 14, sec);
-  } else if(legs === "armor"){
-    outlineRect(ox+9, ly, 6, 15, cloth);
-    outlineRect(ox+17, ly, 6, 15, cloth);
-  } else {
-    outlineRect(ox+10, ly, 5, 14, "#4a3a2a");
-    outlineRect(ox+17, ly, 5, 14, "#4a3a2a");
-  }
-
-  // Torso
-  const ty = oy + 16 + bob;
-  if(torso === "armor"){
-    outlineRect(ox+8, ty, 16, 16, cloth);
-  } else if(torso === "robe"){
-    outlineRect(ox+7, ty, 18, 18, cloth);
-  } else {
-    outlineRect(ox+9, ty, 14, 15, cloth);
-  }
-
-  // Head
-  const hy = oy + 2 + bob;
-  outlineRect(ox+10, hy, 12, 12, skin);
-
-  // Extras
-  if(head === "hood"){
-    outlineRect(ox+8, hy-3, 16, 7, sec);
-  } else if(head === "helmet"){
-    outlineRect(ox+9, hy-2, 14, 6, cloth);
-  } else if(head === "hat"){
-    outlineRect(ox+7, hy-5, 18, 4, "#222");
-  } else if(head === "horns"){
-    outlineRect(ox+7, hy, 4, 5, "#333");
-    outlineRect(ox+21, hy, 4, 5, "#333");
-  }
-
-  // Eyes
-  if(dir < 3){
-    px(ox+13, hy+5, "#000");
-    px(ox+14, hy+5, "#000");
-    px(ox+18, hy+5, "#000");
-    px(ox+19, hy+5, "#000");
-  }
+function renderSheet(){
+ const out=$('preview').getContext('2d');out.clearRect(0,0,128,192);
+ for(let d=0;d<4;d++)for(let f=0;f<4;f++){const c=document.createElement('canvas');c.width=32;c.height=48;drawCharacter(c.getContext('2d'),d,f);out.drawImage(c,f*32,d*48)}
 }
-
-function draw(){
-  ctx.imageSmoothingEnabled = false;
-  const sc = 3;
-  canvas.width = FW*4*sc;
-  canvas.height = FH*4*sc;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.save();
-  ctx.scale(sc, sc);
-  for(let d=0; d<4; d++){
-    for(let f=0; f<4; f++){
-      drawChar(f*FW, d*FH, d, f);
-    }
-  }
-  ctx.restore();
-  document.getElementById("st").textContent = "Generado";
-}
-
-function random(){
-  const heads = ["normal","hood","helmet","hat","horns"];
-  const torsos = ["shirt","armor","robe","jacket"];
-  const legs = ["pants","armor","boots"];
-  document.getElementById("head").value = heads[Math.floor(Math.random()*heads.length)];
-  document.getElementById("torso").value = torsos[Math.floor(Math.random()*torsos.length)];
-  document.getElementById("legs").value = legs[Math.floor(Math.random()*legs.length)];
-  document.getElementById("cloth").value = "#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0");
-  draw();
-}
-
-function dl(){
-  const a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
-  a.download = "parasiders.png";
-  a.click();
-}
-
-draw();
+function drawAll(){renderSheet();const wrap=$('directions');wrap.innerHTML='';['Frente','Izquierda','Derecha','Espalda'].forEach((name,d)=>{const box=document.createElement('div');box.className='dir';const c=document.createElement('canvas');c.width=32;c.height=48;drawCharacter(c.getContext('2d'),d,0);box.append(c,document.createTextNode(name));wrap.append(box)});}
+function randomize(){for(const key of Object.keys(options)){state[key]=options[key][Math.floor(Math.random()*options[key].length)][1]}buildControls();drawAll();$('status').textContent='Nueva combinación generada.'}
+function reset(){state={...defaults};$('primary').value='#48b7ff';$('shadow').value='#123b63';$('accent').value='#d5eaff';$('skin').value='#d3b99b';$('palette').value='blue';buildControls();drawAll();$('status').textContent='Configuración inicial restaurada.'}
+$('download').addEventListener('click',()=>{const a=document.createElement('a');a.download='PARASIDERS_Character.png';a.href=$('preview').toDataURL('image/png');a.click();$('status').textContent='PNG exportado: 128 × 192 px, fondo transparente.'});
+$('random').addEventListener('click',randomize);$('reset').addEventListener('click',reset);
+['primary','shadow','accent','skin'].forEach(id=>$(id).addEventListener('input',()=>{$('palette').value='custom';drawAll()}));
+$('palette').addEventListener('change',e=>{if(paletteSets[e.target.value]){Object.entries(paletteSets[e.target.value]).forEach(([k,v])=>$(k).value=v);drawAll()}});
+buildControls();drawAll();
 </script>
-</body>
-</html>
+</body></html>
